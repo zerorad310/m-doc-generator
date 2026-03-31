@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mawarid Finance — Document Generator</title>
+
+<!-- docxtemplater + PizZip from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.7/pizzip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.7/pizzip-utils.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.50.0/docxtemplater.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0c0f14;
+    --surface: #151921;
+    --surface-hover: #1c2230;
+    --border: #252d3a;
+    --border-focus: #3b82f6;
+    --text: #e8ecf2;
+    --text-muted: #7c879a;
+    --text-dim: #4a5568;
+    --accent: #3b82f6;
+    --accent-glow: rgba(59, 130, 246, 0.15);
+    --accent-hover: #2563eb;
+    --success: #22c55e;
+    --success-bg: rgba(34, 197, 94, 0.1);
+    --error: #ef4444;
+    --error-bg: rgba(239, 68, 68, 0.08);
+    --warning: #f59e0b;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+    --font: 'DM Sans', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ---- Header ---- */
+  .header {
+    padding: 28px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+  }
+  .header-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), #60a5fa);
+    border-radius: var(--radius);
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .header-icon svg { width: 20px; height: 20px; fill: #fff; }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  .header span {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: auto;
+    font-family: var(--mono);
+  }
+
+  /* ---- Layout ---- */
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ---- Sections ---- */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+
+  /* ---- Form fields ---- */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .field-row.full { grid-template-columns: 1fr; }
+  .field-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .field-group input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .field-group input::placeholder {
+    color: var(--text-dim);
+  }
+  .field-group input:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  /* ---- Document selector ---- */
+  .doc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .doc-option {
+    position: relative;
+    cursor: pointer;
+  }
+  .doc-option input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .doc-card {
+    padding: 16px 18px;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    transition: all 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .doc-card:hover {
+    background: var(--surface-hover);
+    border-color: #354054;
+  }
+  .doc-option input:checked + .doc-card {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .doc-check {
+    width: 20px; height: 20px;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    margin-top: 1px;
+    transition: all 0.2s;
+  }
+  .doc-check svg {
+    width: 12px; height: 12px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.15s;
+  }
+  .doc-option input:checked + .doc-card .doc-check {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .doc-option input:checked + .doc-card .doc-check svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .doc-info h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .doc-info p {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+  }
+
+  /* ---- Generate button ---- */
+  .generate-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .generate-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+  }
+  .generate-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  .generate-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ---- Status log ---- */
+  .status-area {
+    margin-top: 20px;
+    display: none;
+  }
+  .status-area.visible { display: block; }
+  .log-container {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    max-height: 240px;
+    overflow-y: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  .log-line { display: flex; align-items: flex-start; gap: 8px; }
+  .log-line .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 7px;
+  }
+  .log-line.info .dot { background: var(--accent); }
+  .log-line.success .dot { background: var(--success); }
+  .log-line.error .dot { background: var(--error); }
+  .log-line.warn .dot { background: var(--warning); }
+  .log-line .msg { color: var(--text-muted); }
+  .log-line.success .msg { color: var(--success); }
+  .log-line.error .msg { color: var(--error); }
+
+  /* ---- Select All ---- */
+  .select-all-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+  }
+  .select-all-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .select-all-btn:hover { text-decoration: underline; }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 560px) {
+    .header { padding: 20px 18px; }
+    .container { padding: 24px 14px 60px; }
+    .section { padding: 20px 16px; }
+    .field-row { grid-template-columns: 1fr; }
+    .doc-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/></svg>
+  </div>
+  <h1>Document Generator</h1>
+  <span>Mawarid Finance</span>
+</div>
+
+<div class="container">
+
+  <!-- Credentials -->
+  <div class="section">
+    <div class="section-label">API Credentials</div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Access Key</label>
+        <input type="password" id="accessKey" placeholder="Enter access key" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label>Secret Key</label>
+        <input type="password" id="secretKey" placeholder="Enter secret key" autocomplete="off">
+      </div>
+    </div>
+    <div class="field-row full">
+      <div class="field-group">
+        <label>Lead ID</label>
+        <input type="text" id="leadId" placeholder="Enter LeadSquared Lead ID" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <!-- Document Selection -->
+  <div class="section">
+    <div class="section-label">Select Documents</div>
+    <div class="select-all-row">
+      <button class="select-all-btn" onclick="toggleSelectAll()">Select All</button>
+    </div>
+    <div class="doc-grid">
+      <label class="doc-option">
+        <input type="checkbox" name="doc" value="LPO">
+        <div class="doc-card">
+          <div class="doc-check"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="doc-info">
+            <h3>LPO</h3>
+            <p>Local Purchase Order</p>
+          </div>
+        </div>
+      </label>
+      <label class="doc-option">
+        <input type="checkbox" name="doc" value="Murabaha">
+        <div class="doc-card">
+          <div class="doc-check"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="doc-info">
+            <h3>Murabaha</h3>
+            <p>Sale Contract</p>
+          </div>
+        </div>
+      </label>
+      <label class="doc-option">
+        <input type="checkbox" name="doc" value="Offer_Letter">
+        <div class="doc-card">
+          <div class="doc-check"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="doc-info">
+            <h3>Offer Letter</h3>
+            <p>Finance Offer</p>
+          </div>
+        </div>
+      </label>
+      <label class="doc-option">
+        <input type="checkbox" name="doc" value="Downpayment">
+        <div class="doc-card">
+          <div class="doc-check"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="doc-info">
+            <h3>Downpayment</h3>
+            <p>Requisition Form</p>
+          </div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <button class="generate-btn" id="generateBtn" onclick="generate()">
+    Generate Documents
+  </button>
+
+  <!-- Status log -->
+  <div class="status-area" id="statusArea">
+    <div class="log-container" id="logContainer"></div>
+  </div>
+
+</div>
+
+<script>
+// ===========================
+// CONFIGURATION
+// ===========================
+
+// Template files — these should be in the same directory as index.html
+// or in a "templates/" subfolder. Adjust the path prefix below.
+const TEMPLATE_PATH_PREFIX = 'templates/';
+
+const DOCUMENTS = {
+  LPO:          { template: 'LPO.docx',          outputPrefix: 'LPO',          label: 'LPO' },
+  Murabaha:     { template: 'Murabaha.docx',      outputPrefix: 'Murabaha_Sale_Contract', label: 'Murabaha' },
+  Offer_Letter: { template: 'Offer_Letter.docx',  outputPrefix: 'Offer_Letter', label: 'Offer Letter' },
+  Downpayment:  { template: 'Downpayment.docx',   outputPrefix: 'Downpayment_Requisition', label: 'Downpayment' },
+};
+
+// ===========================
+// FIELD FORMATTING (ported from Python)
+// ===========================
+
+const DATE_FIELDS = new Set([
+  'mx_Date_of_Acceptance',
+  'mx_Date_of_First_installment',
+  'mx_Date_of_last_installment',
+]);
+
+const AMOUNT_FIELDS_2DP = new Set([
+  'mx_Down_Payment',
+  'mx_Vehicle_Price',
+  'mx_Finance_Amount',
+  'mx_Security_Cheque_Amount',
+  'mx_Processing_Fee',
+  'mx_Vehicle_registration_fee',
+  'mx_Profit_Amount',
+  'mx_Total_Selling_Price_CAR',
+  'mx_Each_Installment_Amount',
+  'mx_Last_Installment_Amount',
+]);
+
+const DECIMAL_2DP_NUMBER_ONLY = new Set([
+  'mx_Profit_Rate',
+]);
+
+function parseDateAny(v) {
+  if (v == null || v === '') return null;
+  let s = String(v).trim();
+
+  // DD/MM/YYYY
+  if (s.includes('/')) {
+    const parts = s.split('/');
+    if (parts.length === 3) {
+      const d = new Date(parts[2], parts[1] - 1, parts[0]);
+      if (!isNaN(d)) return d;
+    }
+  }
+
+  // ISO-ish: "YYYY-MM-DD HH:MM:SS.mmm" or "YYYY-MM-DDT..."
+  if (s.endsWith('Z')) s = s.slice(0, -1);
+  // Replace space with T for ISO parsing
+  const iso = s.replace(' ', 'T');
+  const d = new Date(iso);
+  if (!isNaN(d)) return d;
+
+  return null;
+}
+
+function fmtDateDDMmmYYYY(v) {
+  const d = parseDateAny(v);
+  if (!d) return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${dd}-${months[d.getMonth()]}-${d.getFullYear()}`;
+}
+
+function toNumber(v) {
+  if (v == null || v === '') return null;
+  const cleaned = String(v).replace(/,/g, '').trim();
+  const n = Number(cleaned);
+  return isNaN(n) ? null : n;
+}
+
+function fmtAmount2dp(v) {
+  const n = toNumber(v);
+  if (n == null) return '';
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtNumber2dp(v) {
+  const n = toNumber(v);
+  if (n == null) return '';
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatLeadFields(lead) {
+  const out = {};
+  for (const [k, v] of Object.entries(lead)) {
+    if (v == null) {
+      out[k] = '';
+    } else if (DATE_FIELDS.has(k)) {
+      out[k] = fmtDateDDMmmYYYY(v);
+    } else if (AMOUNT_FIELDS_2DP.has(k)) {
+      out[k] = fmtAmount2dp(v);
+    } else if (DECIMAL_2DP_NUMBER_ONLY.has(k)) {
+      out[k] = fmtNumber2dp(v);
+    } else {
+      out[k] = v;
+    }
+  }
+
+  // Computed field: total_receivable_out_of_selling_price = Finance + Profit
+  const fin = toNumber(lead['mx_Finance_Amount']);
+  const prof = toNumber(lead['mx_Profit_Amount']);
+  if (fin == null && prof == null) {
+    out['total_receivable_out_of_selling_price'] = '';
+  } else {
+    const total = (fin || 0) + (prof || 0);
+    out['total_receivable_out_of_selling_price'] = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  return out;
+}
+
+function normalizeLead(raw) {
+  if (Array.isArray(raw)) {
+    if (raw.length === 0) throw new Error('Lead not found — API returned empty array.');
+    // LSQ returns array of {Attribute, Value} objects or a flat dict
+    const first = raw[0];
+    if (first.Attribute !== undefined && first.Value !== undefined) {
+      // Array of {Attribute, Value} pairs
+      const obj = {};
+      for (const item of raw) {
+        obj[item.Attribute] = item.Value;
+      }
+      return obj;
+    }
+    return first;
+  }
+  if (typeof raw === 'object' && raw !== null) return raw;
+  throw new Error('Unexpected API response format.');
+}
+
+// ===========================
+// UI HELPERS
+// ===========================
+
+function log(msg, type = 'info') {
+  const area = document.getElementById('statusArea');
+  const container = document.getElementById('logContainer');
+  area.classList.add('visible');
+  const line = document.createElement('div');
+  line.className = `log-line ${type}`;
+  line.innerHTML = `<span class="dot"></span><span class="msg">${msg}</span>`;
+  container.appendChild(line);
+  container.scrollTop = container.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('logContainer').innerHTML = '';
+  document.getElementById('statusArea').classList.remove('visible');
+}
+
+function toggleSelectAll() {
+  const boxes = document.querySelectorAll('input[name="doc"]');
+  const allChecked = Array.from(boxes).every(b => b.checked);
+  boxes.forEach(b => b.checked = !allChecked);
+  document.querySelector('.select-all-btn').textContent = allChecked ? 'Select All' : 'Deselect All';
+}
+
+// ===========================
+// TEMPLATE LOADING
+// ===========================
+
+function loadFile(url) {
+  return new Promise((resolve, reject) => {
+    PizZipUtils.getBinaryContent(url, (err, data) => {
+      if (err) reject(new Error(`Failed to load template: ${url}`));
+      else resolve(data);
+    });
+  });
+}
+
+// ===========================
+// MAIN GENERATE FUNCTION
+// ===========================
+
+async function generate() {
+  clearLog();
+
+  const accessKey = document.getElementById('accessKey').value.trim();
+  const secretKey = document.getElementById('secretKey').value.trim();
+  const leadId    = document.getElementById('leadId').value.trim();
+
+  if (!accessKey || !secretKey) { log('Please enter both API keys.', 'error'); return; }
+  if (!leadId) { log('Please enter a Lead ID.', 'error'); return; }
+
+  const selected = Array.from(document.querySelectorAll('input[name="doc"]:checked')).map(cb => cb.value);
+  if (selected.length === 0) { log('Please select at least one document.', 'error'); return; }
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+
+  try {
+    // 1. Fetch lead data
+    log(`Fetching lead data for ${leadId}…`);
+    const apiUrl = `https://in21.leadsquared.com/v2/LeadManagement.svc/Leads.GetById?accessKey=${encodeURIComponent(accessKey)}&secretKey=${encodeURIComponent(secretKey)}&id=${encodeURIComponent(leadId)}`;
+
+    const resp = await fetch(apiUrl);
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`API error ${resp.status}: ${errText}`);
+    }
+    const raw = await resp.json();
+    log('Lead data received.', 'success');
+
+    // 2. Normalize & format
+    const lead = normalizeLead(raw);
+    const context = formatLeadFields(lead);
+
+    // Make sure every value is a string for docxtemplater
+    for (const k of Object.keys(context)) {
+      if (context[k] == null) context[k] = '';
+      else context[k] = String(context[k]);
+    }
+
+    log(`Formatted ${Object.keys(context).length} fields.`);
+
+    // 3. Generate each selected document
+    for (const docKey of selected) {
+      const docConfig = DOCUMENTS[docKey];
+      if (!docConfig) continue;
+
+      log(`Loading template: ${docConfig.label}…`);
+
+      try {
+        const templateBinary = await loadFile(TEMPLATE_PATH_PREFIX + docConfig.template);
+        const zip = new PizZip(templateBinary);
+        const doc = new window.docxtemplater(zip, {
+          paragraphLoop: true,
+          linebreaks: true,
+          delimiters: { start: '{{', end: '}}' },
+          nullGetter: function() { return ''; },
+        });
+
+        doc.render(context);
+
+        const output = doc.getZip().generate({
+          type: 'blob',
+          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        });
+
+        const filename = `${docConfig.outputPrefix}_${leadId}.docx`;
+        saveAs(output, filename);
+        log(`Downloaded: ${filename}`, 'success');
+      } catch (templateErr) {
+        log(`Error generating ${docConfig.label}: ${templateErr.message}`, 'error');
+      }
+    }
+
+    log('All done!', 'success');
+
+  } catch (err) {
+    log(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate Documents';
+  }
+}
+</script>
+
+</body>
+</html>
