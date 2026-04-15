@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mawarid Finance — Document Generator</title>
 
-<!-- docxtemplater + PizZip from CDN -->
+<!-- PizZip + docxtemplater + FileSaver from CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.7/pizzip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.7/pizzip-utils.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.50.0/docxtemplater.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -576,12 +575,11 @@ function toggleSelectAll() {
 // ===========================
 
 function loadFile(url) {
-  return new Promise((resolve, reject) => {
-    PizZipUtils.getBinaryContent(url, (err, data) => {
-      if (err) reject(new Error(`Failed to load template: ${url}`));
-      else resolve(data);
+  return fetch(url)
+    .then(resp => {
+      if (!resp.ok) throw new Error(`Failed to load template: ${url} (HTTP ${resp.status})`);
+      return resp.arrayBuffer();
     });
-  });
 }
 
 // ===========================
@@ -608,7 +606,7 @@ async function generate() {
   try {
     // 1. Fetch lead data
     log(`Fetching lead data for ${leadId}…`);
-    const apiUrl = `https://in21.leadsquared.com/v2/LeadManagement.svc/Leads.GetById?accessKey=${encodeURIComponent(accessKey)}&secretKey=${encodeURIComponent(secretKey)}&id=${encodeURIComponent(leadId)}`;
+    const apiUrl = `https://api-in21.leadsquared.com/v2/LeadManagement.svc/Leads.GetById?accessKey=${encodeURIComponent(accessKey)}&secretKey=${encodeURIComponent(secretKey)}&id=${encodeURIComponent(leadId)}`;
 
     const resp = await fetch(apiUrl);
     if (!resp.ok) {
